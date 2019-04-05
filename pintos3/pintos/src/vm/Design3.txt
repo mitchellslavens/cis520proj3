@@ -69,7 +69,13 @@ recently because of the previous calls to page_accessed_recently().
 >> invalid virtual address should cause the stack to be extended into
 >> the page that faulted.
 
-
+From the write up, the stack should be extended when the page faults due to
+a PUSH or PUSHA instruction. PUSHA can fault 32 bytes below the stack pointer.
+So, faults within 32 bytes of the ESP should be valid. However, if extending the
+stack will cause the stack to be larger than the max stack size (1MB), the
+extension should obviously not happen. So, we first ensure that the extension will
+not cause the stack to exceed the max stack size, and then we check if the fault is
+within 32 bytes of the ESP. If both of these conditions are true, we extend the stack.
 
 			 MEMORY MAPPED FILES
 			 ===================
@@ -80,14 +86,25 @@ recently because of the previous calls to page_accessed_recently().
 >> `struct' member, global or static variable, `typedef', or
 >> enumeration.  Identify the purpose of each in 25 words or less.
 
+We did not add or modify any structs.
+
 ---- ALGORITHMS ----
 
 >> C2: Describe how memory mapped files integrate into your virtual
 >> memory subsystem.  Explain how the page fault and eviction
 >> processes differ between swap pages and other pages.
 
+The threads contain files that are open by it. Memory mapped files are referenced
+through a struct called "mapping". That struct holds a file and the range of
+memory addresses that the file occupies. The swap table is used when evicting
+non memory-mapped files, and also files that have not been modified.
+
 >> C3: Explain how you determine whether a new file mapping overlaps
 >> any existing segment.
+
+The page_allocate() function will only allocate a page if it is free and unmapped.
+It will attempt to add the new mapping to the page table, and if an entry for the
+page already exists, it will unmap and return NULL.
 
 ---- RATIONALE ----
 
@@ -97,6 +114,10 @@ recently because of the previous calls to page_accessed_recently().
 >> that much of their implementation can be shared.  Explain why your
 >> implementation either does or does not share much of the code for
 >> the two situations.
+
+Everything will go through page_out(). We check in that function if the file
+should be written to the disk or not. We write to the disk if the page isn't private.
+Otherwise, we send the page to the swap partition.
 
 			   SURVEY QUESTIONS
 			   ================
