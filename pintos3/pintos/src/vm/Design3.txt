@@ -8,14 +8,16 @@
 
 >> Fill in the names of your group members.
 
-FirstName LastName
-FirstName LastName
-FirstName LastName
+Lev Kavs
+Sam Moylan
+Mitchell Slavens
 
 ---- PRELIMINARIES ----
 
 >> If you have any preliminary comments on your submission, notes for the
 >> TAs, or extra credit, please give them here.
+
+Nope.
 
 >> Please cite any offline or online sources you consulted while
 >> preparing your submission, other than the Pintos documentation, course
@@ -29,10 +31,19 @@ FirstName LastName
 >> A1: In a few paragraphs, describe the existing code for locating the
 >> frame, if any, that contains the data of a given page.
 
+
+
 ---- SYNCHRONIZATION ----
 
 >> A2: When two user processes both need a new frame at the same time,
 >> how are races avoided?
+
+When searching for a frame, processes must first acquire the scan_lock,
+this is done within try_frame_alloc_and_lock() function. This ensures
+synchronicity when accessing the frames array. Additionally frames have
+a lock member that prevent simultaneous access to the same frame. A lock
+to a frame must be accessible, otherwise the try_frame_alloc_and_lock()
+for-loop will attempt to acquire the lock for the next frame.
 
 		       PAGING TO AND FROM DISK
 		       =======================
@@ -42,9 +53,23 @@ FirstName LastName
 >> B1: When a frame is required but none is free, some frame must be
 >> evicted.  Describe the algorithm used to choose a frame to evict.
 
+The second for-loop of try_frame_alloc_and_lock() function is where a
+frame is evicted. This for-loop iterates through the frames two times
+to check the accessed status. First the frame is checked for an
+associated page. If no associated page is found then we return the frame
+immediately. Otherwise, page_accessed_recently() is called on the page
+to check the accessed status. If recently accessed, then the loop moves
+to the next frame changing the page status. If the page is not accessed
+recently then the page is evicted and the frame is returned. If no
+page is not recently accessed then the for-loop begins its second
+iteration and now there is a higher chance of pages not being accessed
+recently because of the previous calls to page_accessed_recently().
+
 >> B2: Explain your heuristic for deciding whether a page fault for an
 >> invalid virtual address should cause the stack to be extended into
 >> the page that faulted.
+
+
 
 			 MEMORY MAPPED FILES
 			 ===================
@@ -85,14 +110,25 @@ the quarter.
 >> In your opinion, was this assignment, or any one of the three problems
 >> in it, too easy or too hard?  Did it take too long or too little time?
 
+It was difficult until we understood the problem. It took a decent amount
+of time to complete. Overall, not bad.
+
 >> Did you find that working on a particular part of the assignment gave
 >> you greater insight into some aspect of OS design?
+
+Yes, when working with the pages and frames.
 
 >> Is there some particular fact or hint we should give students in
 >> future quarters to help them solve the problems?  Conversely, did you
 >> find any of our guidance to be misleading?
 
+No, no.
+
 >> Do you have any suggestions for the TAs to more effectively assist
 >> students, either for future quarters or the remaining projects?
 
+No.
+
 >> Any other comments?
+
+No.
